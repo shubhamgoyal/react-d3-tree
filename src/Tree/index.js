@@ -10,6 +10,8 @@ import Node from '../Node';
 import Link from '../Link';
 import './style.css';
 
+const BUFFER = 20;
+
 export default class Tree extends React.Component {
   constructor(props) {
     super(props);
@@ -395,6 +397,40 @@ export default class Tree extends React.Component {
     };
   }
 
+  getViewBoxString(nodes) {
+    const { orientation } = this.props;
+    let minX = 999999;
+    let minY = 999999;
+    let maxX = -999999;
+    let maxY = -999999;
+    for (let i = 0; i < nodes.length; i += 1) {
+      const node = nodes[i];
+      let nodeX = node.x;
+      let nodeY = node.y;
+      if (orientation === 'horizontal') {
+        nodeX = node.y;
+        nodeY = node.x;
+      }
+      if (nodeX < minX) {
+        minX = nodeX;
+      }
+      if (nodeX > maxX) {
+        maxX = nodeX;
+      }
+      if (nodeY < minY) {
+        minY = nodeY;
+      }
+      if (nodeY > maxY) {
+        maxY = nodeY;
+      }
+    }
+    minX -= BUFFER;
+    minY -= BUFFER;
+    maxX += BUFFER;
+    maxY += BUFFER;
+    return `${minX} ${minY} ${maxX - minX} ${maxY - minY}`;
+  }
+
   render() {
     const { nodes, links } = this.generateTree();
     const { rd3tSvgClassName, rd3tGClassName } = this.state;
@@ -413,6 +449,7 @@ export default class Tree extends React.Component {
       circleRadius,
       allowForeignObjects,
       styles,
+      linkLabelComponent,
     } = this.props;
     const { translate, scale } = this.internalState.d3;
 
@@ -420,7 +457,12 @@ export default class Tree extends React.Component {
 
     return (
       <div className={`rd3t-tree-container ${zoomable ? 'rd3t-grabbable' : undefined}`}>
-        <svg className={rd3tSvgClassName} width="100%" height="100%">
+        <svg
+          className={rd3tSvgClassName}
+          width="100%"
+          height="100%"
+          viewBox={this.getViewBoxString(nodes)}
+        >
           <NodeWrapper
             transitionDuration={transitionDuration}
             component="g"
@@ -435,6 +477,7 @@ export default class Tree extends React.Component {
                 linkData={linkData}
                 transitionDuration={transitionDuration}
                 styles={styles.links}
+                linkLabelComponent={linkLabelComponent}
               />
             ))}
 
@@ -474,6 +517,7 @@ Tree.defaultProps = {
     },
   },
   nodeLabelComponent: null,
+  linkLabelComponent: null,
   onClick: undefined,
   onMouseOver: undefined,
   onMouseOut: undefined,
@@ -548,4 +592,5 @@ Tree.propTypes = {
     nodes: PropTypes.object,
     links: PropTypes.object,
   }),
+  linkLabelComponent: PropTypes.object,
 };

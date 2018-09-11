@@ -9,12 +9,12 @@ import ForeignObjectElement from './ForeignObjectElement';
 export default class Node extends React.Component {
   constructor(props) {
     super(props);
-    const { nodeData: { parent }, orientation } = props;
-    const originX = parent ? parent.x : 0;
-    const originY = parent ? parent.y : 0;
+    const { nodeData: { x, y }, orientation } = props;
+    // const originX = parent ? parent.x : 0;
+    // const originY = parent ? parent.y : 0;
 
     this.state = {
-      transform: this.setTransformOrientation(originX, originY, orientation),
+      transform: this.setTransformOrientation(x, y, orientation),
       initialStyle: {
         opacity: 0,
       },
@@ -119,7 +119,10 @@ export default class Node extends React.Component {
         ref={n => {
           this.node = n;
         }}
-        style={this.state.initialStyle}
+        style={{
+          ...this.state.initialStyle,
+          opacity: 1,
+        }}
         className={nodeData._children ? 'nodeBase' : 'leafNodeBase'}
         transform={this.state.transform}
         onClick={this.handleClick}

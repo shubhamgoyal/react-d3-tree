@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 import { svg, select } from 'd3';
 
 import './style.css';
+import LinkTextElement from './LinkTextElement';
+import ForeignObjectElement from './ForeignObjectElement';
 
 export default class Link extends React.PureComponent {
   constructor(props) {
@@ -88,23 +90,61 @@ export default class Link extends React.PureComponent {
     return this.diagonalPath(linkData, orientation);
   }
 
+  getLineEndPoints(linkData, orientation) {
+    let data = [
+      { x: linkData.source.x, y: linkData.source.y },
+      { x: linkData.target.x, y: linkData.target.y },
+    ];
+    if (orientation === 'horizontal') {
+      data = [
+        { x: linkData.source.y, y: linkData.source.x },
+        { x: linkData.target.y, y: linkData.target.x },
+      ];
+    }
+    return data;
+  }
+
   render() {
-    const { styles } = this.props;
+    const { styles, linkData, orientation, linkLabelComponent } = this.props;
+    const lineEndPoints = this.getLineEndPoints(linkData, orientation);
+    const lineMidX = 0.6 * lineEndPoints[0].x + 0.4 * lineEndPoints[1].x;
+    const lineMidY = 0.6 * lineEndPoints[0].y + 0.4 * lineEndPoints[1].y;
+    let translateY;
+    if (lineEndPoints[0].y > lineEndPoints[1].y) {
+      translateY = lineMidY - 40;
+    } else {
+      translateY = lineMidY + 20;
+    }
     return (
-      <path
-        ref={l => {
-          this.link = l;
-        }}
-        style={{ ...this.state.initialStyle, ...styles }}
-        className="linkBase"
-        d={this.drawPath()}
-      />
+      <g>
+        <path
+          ref={l => {
+            this.link = l;
+          }}
+          style={{ ...this.state.initialStyle, ...styles, opacity: 1 }}
+          className="linkBase"
+          d={this.drawPath()}
+        />
+        {linkLabelComponent ? (
+          <ForeignObjectElement
+            factString={linkData.target.linkText}
+            {...linkLabelComponent}
+            transform={`translate(${lineMidX},${translateY})`}
+          />
+        ) : (
+          <LinkTextElement
+            transform={`translate(${lineMidX},${lineMidY})`}
+            text={linkData.target.linkText}
+          />
+        )}
+      </g>
     );
   }
 }
 
 Link.defaultProps = {
   styles: {},
+  linkLabelComponent: undefined,
 };
 
 Link.propTypes = {
@@ -116,4 +156,5 @@ Link.propTypes = {
   ]).isRequired,
   transitionDuration: PropTypes.number.isRequired,
   styles: PropTypes.object,
+  linkLabelComponent: PropTypes.object,
 };
